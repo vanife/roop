@@ -204,7 +204,7 @@ class RoopApp:
         )
 
         stop_button = ft.ElevatedButton(
-            "Destroy", width=120, on_click=lambda _: self.destroy()
+            "Destroy", width=120, on_click=lambda _: self.on_destroy_click()
         )
 
         preview_button = ft.ElevatedButton(
@@ -238,6 +238,11 @@ class RoopApp:
             if path:
                 roop.globals.output_path = path
                 self.start()
+
+    def on_destroy_click(self):
+        if self.page:
+            self.page.window.close()
+        self.destroy()
 
     def create_donate_link(self) -> ft.Text:
         return ft.Text(
