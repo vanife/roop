@@ -4,6 +4,7 @@ import os
 import sys
 import io
 import cv2
+import base64
 import webbrowser
 from typing import Callable, Optional, Tuple
 
@@ -359,8 +360,9 @@ class RoopApp:
         buffer = io.BytesIO()
         pil_image.save(buffer, format="PNG")
         buffer.seek(0)
+        base64_data = base64.b64encode(buffer.read()).decode("utf-8")
         return ft.Image(
-            src_base64=buffer.read().hex(),
+            src=f"data:image/png;base64,{base64_data}",
             width=pil_image.width,
             height=pil_image.height,
         )
@@ -422,7 +424,7 @@ class RoopApp:
             image = ImageOps.contain(
                 image, (PREVIEW_MAX_WIDTH, PREVIEW_MAX_HEIGHT), Image.Resampling.LANCZOS
             )
-            self.preview_image.src_base64 = self.pil_image_to_base64(image)
+            self.preview_image.src = self.pil_image_to_base64(image)
             self.preview_image.width = image.width
             self.preview_image.height = image.height
             if self.page:
@@ -432,7 +434,8 @@ class RoopApp:
         buffer = io.BytesIO()
         pil_image.save(buffer, format="PNG")
         buffer.seek(0)
-        return buffer.read().hex()
+        base64_data = base64.b64encode(buffer.read()).decode("utf-8")
+        return f"data:image/png;base64,{base64_data}"
 
     def update_face_reference(self, steps: int):
         clear_face_reference()
