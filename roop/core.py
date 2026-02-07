@@ -272,7 +272,20 @@ def pre_check() -> bool:
 def update_status(message: str, scope: str = "ROOP.CORE") -> None:
     print(f"[{scope}] {message}")
     if not roop.globals.headless:
-        ui.update_status(message)
+        if roop.globals.ui_framework == "flet":
+            try:
+                import roop.ui_flet as ui
+
+                ui.update_status(message)
+            except Exception:
+                pass
+        else:
+            try:
+                import roop.ui as ui
+
+                ui.update_status(message)
+            except Exception:
+                pass
 
 
 def start() -> None:
@@ -357,7 +370,7 @@ def start() -> None:
 def destroy() -> None:
     if roop.globals.target_path:
         clean_temp(roop.globals.target_path)
-    sys.exit()
+    os._exit(0)  # or sys.exit()
 
 
 def run() -> None:

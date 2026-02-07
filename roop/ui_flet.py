@@ -5,7 +5,6 @@ import sys
 import io
 import cv2
 import base64
-import webbrowser
 from typing import Callable, Optional, Tuple
 
 import flet as ft
@@ -77,7 +76,6 @@ class RoopApp:
                     self.create_switches(),
                     self.create_action_buttons(),
                     self.status_text,
-                    self.create_donate_link(),
                 ],
                 alignment=ft.MainAxisAlignment.START,
                 spacing=10,
@@ -243,15 +241,6 @@ class RoopApp:
         if self.page:
             self.page.window.close()
         self.destroy()
-
-    def create_donate_link(self) -> ft.Text:
-        return ft.Text(
-            "^_^ Donate to project ^_^",
-            color=ft.Colors.PRIMARY,
-            text_align=ft.TextAlign.CENTER,
-            on_tap=lambda _: webbrowser.open("https://github.com/sponsors/s0md3v"),
-            style=ft.TextStyle(decoration=ft.TextDecoration.UNDERLINE),
-        )
 
     def create_preview_dialog(self):
         self.preview_image = ft.Image(
