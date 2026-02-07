@@ -5,6 +5,8 @@ import sys
 import io
 import cv2
 import base64
+import asyncio
+import webbrowser
 from typing import Callable, Optional, Tuple
 
 import flet as ft
@@ -22,7 +24,6 @@ from roop.face_reference import (
 from roop.predictor import predict_frame, clear_predictor
 from roop.processors.frame.core import get_frame_processors_modules
 from roop.utilities import is_image, is_video
-
 
 PREVIEW_MAX_HEIGHT = 700
 PREVIEW_MAX_WIDTH = 1200
@@ -239,8 +240,12 @@ class RoopApp:
 
     def on_destroy_click(self):
         if self.page:
-            self.page.window.close()
-        self.destroy()
+            self.page.window.destroy()
+        try:
+            asyncio.get_event_loop().stop()
+        except Exception:
+            pass
+        os._exit(0)
 
     def create_preview_dialog(self):
         self.preview_image = ft.Image(
