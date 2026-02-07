@@ -21,6 +21,27 @@ Be aware, the installation needs technical skills and is not for beginners. Plea
 [Acceleration](https://github.com/s0md3v/roop/wiki/2.-Acceleration) - Unleash the full potential of your CPU and GPU
 
 
+### Modern stack:-
+ - [ ] @TODO: document:
+ - install tkdnd on linux:
+    * on archlinux: `yay -S tkdnd`
+
+
+dependencies:
+    "customtkinter",
+    "insightface",
+    "numpy",
+    "onnx",
+    "onnxruntime-gpu",
+    "opencv-python",
+    "opennsfw2",
+    "pillow",
+    "psutil",
+    "tensorflow",
+    "tk",
+    "tkinterdnd2-universal"
+
+
 ## Usage
 
 Start the program with arguments:
