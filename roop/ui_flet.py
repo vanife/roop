@@ -66,10 +66,6 @@ class RoopApp:
         self.output_picker = ft.FilePicker()
         self.status_text = ft.Text(text_align=ft.TextAlign.CENTER, width=480)
 
-        page.overlay.extend(
-            [self.source_picker, self.target_picker, self.output_picker]
-        )
-
         self.create_preview_dialog()
 
         page.add(
@@ -327,7 +323,7 @@ class RoopApp:
         if image:
             container.content = image
             container.border = None
-            container.bgcolor = ft.Colors.TRANSPARENT
+            container.bgcolor = None
         else:
             container.content = ft.Text(
                 "Drop source here\nor click to select", text_align=ft.TextAlign.CENTER
