@@ -372,9 +372,10 @@ def run() -> None:
         start()
     else:
         if roop.globals.ui_framework == "flet":
+            import flet
             import roop.ui_flet as ui
 
-            ui.app(target=ui.init(start, destroy))
+            flet.app(target=ui.init(start, destroy))
         else:
             import roop.ui as ui
 

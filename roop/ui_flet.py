@@ -52,7 +52,7 @@ class RoopApp:
         self.target_picker = None
         self.output_picker = None
 
-    def build(self, page: ft.Page):
+    async def build(self, page: ft.Page):
         self.page = page
         page.title = f"{roop.metadata.name} {roop.metadata.version}"
         page.window.width = 600
@@ -61,9 +61,9 @@ class RoopApp:
         page.window.min_height = 700
         page.theme_mode = ft.ThemeMode.SYSTEM
 
-        self.source_picker = ft.FilePicker(on_result=self.on_source_selected)
-        self.target_picker = ft.FilePicker(on_result=self.on_target_selected)
-        self.output_picker = ft.FilePicker(on_result=self.on_output_selected)
+        self.source_picker = ft.FilePicker()
+        self.target_picker = ft.FilePicker()
+        self.output_picker = ft.FilePicker()
         self.status_text = ft.Text(text_align=ft.TextAlign.CENTER, width=480)
 
         page.overlay.extend(
@@ -96,41 +96,24 @@ class RoopApp:
         self.source_label = ft.Container(
             width=200,
             height=175,
-            bgcolor=ft.colors.SURFACE_VARIANT,
-            border=ft.border.all(2, ft.colors.OUTLINE),
+            bgcolor=ft.Colors.GREY_300,
+            border=ft.border.all(2, ft.Colors.OUTLINE),
             border_radius=8,
-            alignment=ft.alignment.center,
+            alignment=ft.alignment.Alignment(0.5, 0.5),
             content=ft.Text(
                 "Drop source here\nor click to select", text_align=ft.TextAlign.CENTER
-            ),
-            on_click=lambda _: self.source_picker.pick_files(
-                allowed_extensions=["png", "jpg", "jpeg", "webp"],
-                file_type=ft.FilePickerFileType.IMAGE,
             ),
         )
 
         self.target_label = ft.Container(
             width=200,
             height=175,
-            bgcolor=ft.colors.SURFACE_VARIANT,
-            border=ft.border.all(2, ft.colors.OUTLINE),
+            bgcolor=ft.Colors.GREY_300,
+            border=ft.border.all(2, ft.Colors.OUTLINE),
             border_radius=8,
-            alignment=ft.alignment.center,
+            alignment=ft.alignment.Alignment(0.5, 0.5),
             content=ft.Text(
                 "Drop target here\nor click to select", text_align=ft.TextAlign.CENTER
-            ),
-            on_click=lambda _: self.target_picker.pick_files(
-                allowed_extensions=[
-                    "png",
-                    "jpg",
-                    "jpeg",
-                    "webp",
-                    "mp4",
-                    "avi",
-                    "mov",
-                    "mkv",
-                ],
-                file_type=ft.FilePickerFileType.ANY,
             ),
         )
 
@@ -144,28 +127,13 @@ class RoopApp:
         source_button = ft.ElevatedButton(
             "Select a face",
             width=180,
-            on_click=lambda _: self.source_picker.pick_files(
-                allowed_extensions=["png", "jpg", "jpeg", "webp"],
-                file_type=ft.FilePickerFileType.IMAGE,
-            ),
+            on_click=self.on_source_click,
         )
 
         target_button = ft.ElevatedButton(
             "Select a target",
             width=180,
-            on_click=lambda _: self.target_picker.pick_files(
-                allowed_extensions=[
-                    "png",
-                    "jpg",
-                    "jpeg",
-                    "webp",
-                    "mp4",
-                    "avi",
-                    "mov",
-                    "mkv",
-                ],
-                file_type=ft.FilePickerFileType.ANY,
-            ),
+            on_click=self.on_target_click,
         )
 
         return ft.Row(
@@ -173,6 +141,31 @@ class RoopApp:
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=20,
         )
+
+    async def on_source_click(self, e):
+        files = await self.source_picker.pick_files(
+            allowed_extensions=["png", "jpg", "jpeg", "webp"],
+            file_type=ft.FilePickerFileType.IMAGE,
+        )
+        if files and len(files) > 0:
+            self.select_source_path(files[0].path)
+
+    async def on_target_click(self, e):
+        files = await self.target_picker.pick_files(
+            allowed_extensions=[
+                "png",
+                "jpg",
+                "jpeg",
+                "webp",
+                "mp4",
+                "avi",
+                "mov",
+                "mkv",
+            ],
+            file_type=ft.FilePickerFileType.ANY,
+        )
+        if files and len(files) > 0:
+            self.select_target_path(files[0].path)
 
     def create_switches(self) -> ft.Row:
         self.keep_fps_switch = ft.Switch(
@@ -210,21 +203,15 @@ class RoopApp:
 
     def create_action_buttons(self) -> ft.Row:
         start_button = ft.ElevatedButton(
-            "Start",
-            width=120,
-            on_click=lambda _: self.select_output_path(),
+            "Start", width=120, on_click=self.on_start_click
         )
 
         stop_button = ft.ElevatedButton(
-            "Destroy",
-            width=120,
-            on_click=lambda _: self.destroy(),
+            "Destroy", width=120, on_click=lambda _: self.destroy()
         )
 
         preview_button = ft.ElevatedButton(
-            "Preview",
-            width=120,
-            on_click=lambda _: self.toggle_preview(),
+            "Preview", width=120, on_click=lambda _: self.toggle_preview()
         )
 
         return ft.Row(
@@ -233,18 +220,43 @@ class RoopApp:
             spacing=20,
         )
 
+    async def on_start_click(self, e):
+        if is_image(roop.globals.target_path):
+            path = await self.output_picker.save_file(
+                allowed_extensions=["png", "jpg", "jpeg"],
+                file_type=ft.FilePickerFileType.IMAGE,
+                initial_directory=RECENT_DIRECTORY_OUTPUT,
+                file_name="output.png",
+            )
+            if path:
+                roop.globals.output_path = path
+                self.start()
+        elif is_video(roop.globals.target_path):
+            path = await self.output_picker.save_file(
+                allowed_extensions=["mp4", "avi", "mov", "mkv"],
+                file_type=ft.FilePickerFileType.ANY,
+                initial_directory=RECENT_DIRECTORY_OUTPUT,
+                file_name="output.mp4",
+            )
+            if path:
+                roop.globals.output_path = path
+                self.start()
+
     def create_donate_link(self) -> ft.Text:
         return ft.Text(
             "^_^ Donate to project ^_^",
-            color=ft.colors.PRIMARY,
+            color=ft.Colors.PRIMARY,
             text_align=ft.TextAlign.CENTER,
-            on_click=lambda _: webbrowser.open("https://github.com/sponsors/s0md3v"),
+            on_tap=lambda _: webbrowser.open("https://github.com/sponsors/s0md3v"),
             style=ft.TextStyle(decoration=ft.TextDecoration.UNDERLINE),
         )
 
     def create_preview_dialog(self):
         self.preview_image = ft.Image(
-            width=PREVIEW_MAX_WIDTH, height=PREVIEW_MAX_HEIGHT, fit=ft.ImageFit.CONTAIN
+            src="",
+            width=PREVIEW_MAX_WIDTH,
+            height=PREVIEW_MAX_HEIGHT,
+            fit=ft.BoxFit.CONTAIN,
         )
         self.preview_slider = ft.Slider(
             min=0,
@@ -262,19 +274,6 @@ class RoopApp:
             on_dismiss=self.on_preview_dismiss,
         )
 
-    def on_source_selected(self, e: ft.FilePickerResultEvent):
-        if e.files and len(e.files) > 0:
-            self.select_source_path(e.files[0].path)
-
-    def on_target_selected(self, e: ft.FilePickerResultEvent):
-        if e.files and len(e.files) > 0:
-            self.select_target_path(e.files[0].path)
-
-    def on_output_selected(self, e: ft.FilePickerResultEvent):
-        if e.path:
-            roop.globals.output_path = e.path
-            self.start()
-
     def on_slider_change(self, e: ft.ControlEvent):
         frame_number = int(e.control.value)
         roop.globals.reference_frame_number = frame_number
@@ -287,7 +286,8 @@ class RoopApp:
     def update_status(self, text: str):
         if self.status_text:
             self.status_text.value = text
-            self.page.update()
+            if self.page:
+                self.page.update()
 
     def select_source_path(self, source_path: Optional[str] = None):
         global RECENT_DIRECTORY_SOURCE
@@ -323,36 +323,19 @@ class RoopApp:
             if self.page:
                 self.page.update()
 
-    def select_output_path(self):
-        global RECENT_DIRECTORY_OUTPUT
-
-        if is_image(roop.globals.target_path):
-            self.output_picker.save_file(
-                allowed_extensions=["png", "jpg", "jpeg"],
-                file_type=ft.FilePickerFileType.IMAGE,
-                initial_directory=RECENT_DIRECTORY_OUTPUT,
-                initial_file="output.png",
-            )
-        elif is_video(roop.globals.target_path):
-            self.output_picker.save_file(
-                allowed_extensions=["mp4", "avi", "mov", "mkv"],
-                file_type=ft.FilePickerFileType.ANY,
-                initial_directory=RECENT_DIRECTORY_OUTPUT,
-                initial_file="output.mp4",
-            )
-
     def update_preview_image(self, container: ft.Container, image: Optional[ft.Image]):
         if image:
             container.content = image
             container.border = None
-            container.bgcolor = ft.colors.TRANSPARENT
+            container.bgcolor = ft.Colors.TRANSPARENT
         else:
             container.content = ft.Text(
                 "Drop source here\nor click to select", text_align=ft.TextAlign.CENTER
             )
-            container.border = ft.border.all(2, ft.colors.OUTLINE)
-            container.bgcolor = ft.colors.SURFACE_VARIANT
-        self.page.update()
+            container.border = ft.border.all(2, ft.Colors.OUTLINE)
+            container.bgcolor = ft.Colors.GREY_300
+        if self.page:
+            self.page.update()
 
     def render_image_preview(self, image_path: str, size: Tuple[int, int]) -> ft.Image:
         image = Image.open(image_path)
@@ -362,7 +345,7 @@ class RoopApp:
 
     def render_video_preview(
         self, video_path: str, size: Tuple[int, int], frame_number: int = 0
-    ) -> ft.Image:
+    ) -> Optional[ft.Image]:
         capture = cv2.VideoCapture(video_path)
         if frame_number:
             capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
@@ -391,14 +374,16 @@ class RoopApp:
             self.preview_dialog.open = False
             self.preview_visible = False
             clear_predictor()
-            self.page.update()
+            if self.page:
+                self.page.update()
         elif roop.globals.source_path and roop.globals.target_path:
             self.init_preview()
             self.update_preview(roop.globals.reference_frame_number)
             self.page.dialog = self.preview_dialog
             self.preview_dialog.open = True
             self.preview_visible = True
-            self.page.update()
+            if self.page:
+                self.page.update()
 
     def init_preview(self):
         title = "Preview [ ↕ Reference face ]"
@@ -444,7 +429,8 @@ class RoopApp:
             self.preview_image.src_base64 = self.pil_image_to_base64(image)
             self.preview_image.width = image.width
             self.preview_image.height = image.height
-            self.page.update()
+            if self.page:
+                self.page.update()
 
     def pil_image_to_base64(self, pil_image: Image.Image) -> str:
         buffer = io.BytesIO()
@@ -465,14 +451,17 @@ class RoopApp:
         self.update_preview(int(self.preview_slider.value))
 
 
-app = None
 _app_instance = None
 
 
 def init(start: Callable[[], None], destroy: Callable[[], None]):
     global _app_instance
     _app_instance = RoopApp(start, destroy)
-    return _app_instance.build
+
+    async def build(page: ft.Page):
+        await _app_instance.build(page)
+
+    return build
 
 
 def update_status(text: str):
