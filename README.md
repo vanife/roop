@@ -22,24 +22,22 @@ Be aware, the installation needs technical skills and is not for beginners. Plea
 
 
 ### Modern stack:-
- - [ ] @TODO: document:
- - install tkdnd on linux:
-    * on archlinux: `yay -S tkdnd`
+@TODO: document:
+
+Requirements (on the OS):
+- (optional) tensorrt
+    > arch: yay -S tensorrt
+    > ubuntu (TBC): sudo apt install tensorrt
+    > windows: ???
+- nvidia-tensorrt ???
 
 
-dependencies:
-    "customtkinter",
-    "insightface",
-    "numpy",
-    "onnx",
-    "onnxruntime-gpu",
-    "opencv-python",
-    "opennsfw2",
-    "pillow",
-    "psutil",
-    "tensorflow",
-    "tk",
-    "tkinterdnd2-universal"
+Installation:
+`uv sync --extra flet`
+
+Run:
+`uv run python run.py`
+
 
 
 ## Usage

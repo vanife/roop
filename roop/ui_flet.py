@@ -5,8 +5,6 @@ import sys
 import io
 import cv2
 import base64
-import asyncio
-import webbrowser
 from typing import Callable, Optional, Tuple
 
 import flet as ft
@@ -53,7 +51,7 @@ class RoopApp:
         self.target_picker = None
         self.output_picker = None
 
-    async def build(self, page: ft.Page):
+    def build(self, page: ft.Page):
         self.page = page
         page.title = f"{roop.metadata.name} {roop.metadata.version}"
         page.window.width = 600
@@ -203,7 +201,9 @@ class RoopApp:
         )
 
         stop_button = ft.ElevatedButton(
-            "Destroy", width=120, on_click=lambda _: self.on_destroy_click()
+            "Destroy",
+            width=120,
+            on_click=lambda _: self.on_destroy_click(),
         )
 
         preview_button = ft.ElevatedButton(
@@ -238,14 +238,10 @@ class RoopApp:
                 roop.globals.output_path = path
                 self.start()
 
-    def on_destroy_click(self):
+    async def on_destroy_click(self):
         if self.page:
-            self.page.window.destroy()
-        try:
-            asyncio.get_event_loop().stop()
-        except Exception:
-            pass
-        os._exit(0)
+            await self.page.window.destroy()
+        self.destroy()  # core callback
 
     def create_preview_dialog(self):
         self.preview_image = ft.Image(
@@ -452,14 +448,10 @@ class RoopApp:
 _app_instance = None
 
 
-def init(start: Callable[[], None], destroy: Callable[[], None]):
+def mainloop(start: Callable[[], None], destroy: Callable[[], None]):
     global _app_instance
     _app_instance = RoopApp(start, destroy)
-
-    async def build(page: ft.Page):
-        await _app_instance.build(page)
-
-    return build
+    ft.run(_app_instance.build)
 
 
 def update_status(text: str):

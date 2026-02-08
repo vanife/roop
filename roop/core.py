@@ -18,7 +18,6 @@ import onnxruntime
 import tensorflow
 import roop.globals
 import roop.metadata
-import roop.ui as ui
 from roop.predictor import predict_image, predict_video
 from roop.processors.frame.core import get_frame_processors_modules
 from roop.utilities import (
@@ -370,7 +369,7 @@ def start() -> None:
 def destroy() -> None:
     if roop.globals.target_path:
         clean_temp(roop.globals.target_path)
-    os._exit(0)  # or sys.exit()
+    sys.exit()
 
 
 def run() -> None:
@@ -385,12 +384,10 @@ def run() -> None:
         start()
     else:
         if roop.globals.ui_framework == "flet":
-            import flet
             import roop.ui_flet as ui
 
-            flet.app(target=ui.init(start, destroy))
+            ui.mainloop(start, destroy)
         else:
             import roop.ui as ui
 
-            window = ui.init(start, destroy)
-            window.mainloop()
+            ui.init(start, destroy).mainloop()
